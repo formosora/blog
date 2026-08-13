@@ -1,34 +1,81 @@
 <script setup lang="ts">
-import HeroCard from '../components/HeroCard.vue'
-import { formatDate, posts } from '../posts'
+import { computed, ref } from 'vue'
+import ProfileCard from '../components/ProfileCard.vue'
+import MusicCard from '../components/MusicCard.vue'
+import TickerBar from '../components/TickerBar.vue'
+import { coverHue, formatDate, posts, tagEmoji } from '../posts'
+import { theme, toggleTheme } from '../theme'
 
-const latest = posts.slice(0, 4)
+const query = ref('')
+
+const latest = computed(() => {
+  const q = query.value.trim().toLowerCase()
+  const list = q
+    ? posts.filter(p =>
+        [p.title, p.excerpt, p.tags.join(' '), p.body]
+          .join(' ')
+          .toLowerCase()
+          .includes(q)
+      )
+    : posts
+  return list.slice(0, 3)
+})
+
+const coverStyle = (slug: string) => {
+  const h = coverHue(slug)
+  return {
+    background: `linear-gradient(135deg, hsl(${h} 65% 42%), hsl(${(h + 50) % 360} 60% 30%))`,
+  }
+}
 </script>
 
 <template>
-  <HeroCard />
+  <div class="search-wrap">
+    <label class="search-box">
+      <span class="mag">🔍</span>
+      <input v-model="query" type="search" placeholder="搜索标题、描述或标签…" />
+    </label>
+  </div>
 
-  <section class="latest">
+  <div class="home-grid">
+    <ProfileCard />
+    <MusicCard />
+  </div>
+
+  <TickerBar />
+
+  <section>
     <div class="section-head">
-      <h2>Latest writing</h2>
-      <RouterLink to="/posts" class="more-link">All posts →</RouterLink>
+      <h2>最新文章</h2>
+      <RouterLink to="/posts" class="more-link">全部文章 →</RouterLink>
     </div>
 
-    <ul class="latest-list">
-      <li
+    <div class="bento">
+      <RouterLink
         v-for="(post, i) in latest"
         :key="post.slug"
-        class="glass-card latest-item"
-        :style="{ animationDelay: 0.2 + i * 0.09 + 's' }"
+        :to="`/post/${post.slug}`"
+        class="glass-card bento-item"
+        :style="{ animationDelay: 0.1 + i * 0.09 + 's' }"
       >
-        <RouterLink :to="`/post/${post.slug}`" class="latest-link">
-          <span class="post-date">{{ formatDate(post.date) }}</span>
-          <h3 class="latest-title">{{ post.title }}</h3>
-          <span class="post-tags">
-            <span v-for="tag in post.tags" :key="tag" class="tag">#{{ tag }}</span>
-          </span>
-        </RouterLink>
-      </li>
-    </ul>
+        <div class="cover" :style="coverStyle(post.slug)">
+          <span class="cover-emoji">{{ tagEmoji(post.tags[0]) }}</span>
+        </div>
+        <div class="bento-content">
+          <div class="bento-badges">
+            <span class="pill">{{ post.tags[0] ?? 'NOTE' }}</span>
+            <span class="pill date">{{ formatDate(post.date) }}</span>
+          </div>
+          <h3 class="bento-title">{{ post.title }}</h3>
+          <p v-if="i === 0" class="bento-excerpt">{{ post.excerpt }}</p>
+        </div>
+      </RouterLink>
+
+      <button class="glass-card bento-item theme-card" @click="toggleTheme">
+        <span class="theme-icon">{{ theme === 'dark' ? '🌞' : '✨' }}</span>
+        <b>{{ theme === 'dark' ? '日间模式' : '夜间模式' }}</b>
+        <span>{{ theme === 'dark' ? '切换到清爽浅色' : '流萤飞舞的深空' }}</span>
+      </button>
+    </div>
   </section>
 </template>

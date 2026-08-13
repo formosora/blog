@@ -1,24 +1,23 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import bgUrl from '../assets/bg.svg'
 
-// Ambient particles (CSS fireflies) — random positions/durations, cheap and GPU-friendly
 const particles = computed(() =>
-  Array.from({ length: 18 }, () => ({
+  Array.from({ length: 16 }, () => ({
     left: Math.random() * 100,
     top: Math.random() * 100,
-    size: 3 + Math.random() * 4,
+    size: 2.5 + Math.random() * 3.5,
     duration: 14 + Math.random() * 18,
     delay: -Math.random() * 20,
-    opacity: 0.25 + Math.random() * 0.4,
+    opacity: 0.2 + Math.random() * 0.4,
   }))
 )
 </script>
 
 <template>
   <div class="bg-fx" aria-hidden="true">
-    <div class="orb orb-1" />
-    <div class="orb orb-2" />
-    <div class="orb orb-3" />
+    <img class="bg-img" :src="bgUrl" alt="" />
+    <div class="bg-dim" />
     <span
       v-for="(p, i) in particles"
       :key="i"

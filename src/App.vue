@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import BackgroundFX from './components/BackgroundFX.vue'
-
-const year = new Date().getFullYear()
+import StatusBar from './components/StatusBar.vue'
 </script>
 
 <template>
@@ -10,12 +9,10 @@ const year = new Date().getFullYear()
 
     <header class="site-header glass-bar">
       <div class="wrap header-inner">
-        <RouterLink to="/" class="brand">formosora<span>.blog</span></RouterLink>
+        <RouterLink to="/" class="brand">formosora<span> の 小站</span></RouterLink>
         <nav class="site-nav">
-          <RouterLink to="/">Home</RouterLink>
-          <RouterLink to="/posts">Posts</RouterLink>
-          <RouterLink to="/about">About</RouterLink>
-          <a href="https://github.com/formosora" target="_blank" rel="noopener">GitHub</a>
+          <RouterLink to="/projects">项目</RouterLink>
+          <RouterLink to="/posts">文章</RouterLink>
         </nav>
       </div>
     </header>
@@ -24,10 +21,8 @@ const year = new Date().getFullYear()
       <RouterView />
     </main>
 
-    <footer class="site-footer">
-      <div class="wrap">
-        © {{ year }} formosora · Built with Vue 3 + Vite · Hosted on GitHub Pages
-      </div>
+    <footer class="wrap">
+      <StatusBar />
     </footer>
   </div>
 </template>

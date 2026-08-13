@@ -62,3 +62,25 @@ export const formatDate = (iso: string): string =>
     month: 'short',
     day: 'numeric',
   })
+
+/** Deterministic hue from a string, for generated card covers. */
+export const coverHue = (seed: string): number => {
+  let h = 0
+  for (const c of seed) h = (h * 31 + c.charCodeAt(0)) % 360
+  return h
+}
+
+const TAG_EMOJI: Record<string, string> = {
+  kernel: '🪟',
+  windows: '🪟',
+  react: '⚛️',
+  vue: '💚',
+  meta: '📝',
+  'aspnet-core': '🟪',
+  docker: '🐳',
+  formcms: '🧩',
+  security: '🔐',
+  go: '🐹',
+}
+
+export const tagEmoji = (tag?: string): string => TAG_EMOJI[tag ?? ''] ?? '📝'
