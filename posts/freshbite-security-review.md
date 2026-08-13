@@ -1,7 +1,7 @@
 ---
 title: "Self-audit: I pentested my own food-ordering app"
 date: 2026-08-13
-tags: [security, aspnet-core, react]
+tags: [WebSafety]
 excerpt: Three real vulnerabilities I found in FreshBite by reading my own code like an attacker — hardcoded guest credentials, an IDOR leaking customer phones, and README-documented admin passwords.
 ---
 

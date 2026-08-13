@@ -1,7 +1,7 @@
 ---
 title: "Windows kernel notes #2: how IRPs flow through the I/O manager"
 date: 2026-08-08
-tags: [windows, kernel]
+tags: [SystemKernel]
 excerpt: Follow-up to the IRQL note — what an IRP actually is, how it travels from NtReadFile down the driver stack, and why IoCompleteRequest is where cleanup bugs hide.
 ---
 

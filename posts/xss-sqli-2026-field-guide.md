@@ -1,7 +1,7 @@
 ---
 title: "XSS & SQL injection: a 2026 field guide (fixing the classics)"
 date: 2026-08-13
-tags: [security, web, xss]
+tags: [WebSafety]
 excerpt: The classic Chinese XSS/SQLi tutorials taught a generation of developers — but some of their advice is now wrong. An updated walkthrough with working mental models and the corrections.
 ---
 

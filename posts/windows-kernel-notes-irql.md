@@ -1,7 +1,7 @@
 ---
 title: "Windows kernel notes #1: IRQL"
 date: 2026-07-20
-tags: [windows, kernel]
+tags: [SystemKernel]
 excerpt: First in a series of study notes on Windows internals — what IRQL is and why driver code lives and dies by it.
 ---
 

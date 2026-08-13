@@ -1,7 +1,7 @@
 ---
 title: "Anatomy of FreshBite: wiring a React storefront to a headless CMS"
 date: 2026-08-11
-tags: [aspnet-core, formcms, react]
+tags: [WebDev]
 excerpt: The four API calls that run the shop, the guest-login trick behind checkout, and the MapWhen fallback that lets one container serve both SPA and API.
 ---
 

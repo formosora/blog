@@ -2,7 +2,7 @@
 title: "Building FreshBite: a food-ordering app in a weekend"
 date: 2026-08-05
 updated: 2026-08-12
-tags: [react, aspnet-core, formcms, docker]
+tags: [WebDev]
 excerpt: Browse menu → add to cart → guest checkout. Notes from rebuilding a full-stack demo the right way.
 ---
 
