@@ -611,6 +611,10 @@ a {
     color: var(--color-accent);
 }
 
+.tag-chip.dim {
+    opacity: 0.45;
+}
+
 .post-list {
     list-style: none;
     margin: 0;
@@ -755,6 +759,12 @@ a {
 
 .not-found {
     text-align: center;
+}
+
+.empty-state {
+    padding: 3.5rem 1rem;
+    text-align: center;
+    color: var(--color-text-muted);
 }
 
 /* ---------- Projects page ---------- */
