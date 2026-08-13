@@ -9,8 +9,8 @@ const html = computed(() => (post.value ? renderPost(post.value) : ''))
 </script>
 
 <template>
-  <article v-if="post" class="post">
-    <p><RouterLink to="/" class="back-link">← All posts</RouterLink></p>
+  <article v-if="post" class="post glass-card post-shell">
+    <p><RouterLink to="/posts" class="back-link">← All posts</RouterLink></p>
     <h1 class="post-heading">{{ post.title }}</h1>
     <p class="post-meta">
       <time>{{ formatDate(post.date) }}</time>
@@ -23,8 +23,8 @@ const html = computed(() => (post.value ? renderPost(post.value) : ''))
     <div class="post-body" v-html="html" />
   </article>
 
-  <div v-else class="not-found">
+  <div v-else class="glass-card post-shell not-found">
     <h1>Post not found</h1>
-    <p><RouterLink to="/" class="back-link">← Back to all posts</RouterLink></p>
+    <p><RouterLink to="/" class="back-link">← Back home</RouterLink></p>
   </div>
 </template>

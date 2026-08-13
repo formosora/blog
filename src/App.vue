@@ -1,14 +1,19 @@
 <script setup lang="ts">
+import BackgroundFX from './components/BackgroundFX.vue'
+
 const year = new Date().getFullYear()
 </script>
 
 <template>
   <div class="site">
-    <header class="site-header">
+    <BackgroundFX />
+
+    <header class="site-header glass-bar">
       <div class="wrap header-inner">
         <RouterLink to="/" class="brand">formosora<span>.blog</span></RouterLink>
         <nav class="site-nav">
-          <RouterLink to="/">Posts</RouterLink>
+          <RouterLink to="/">Home</RouterLink>
+          <RouterLink to="/posts">Posts</RouterLink>
           <RouterLink to="/about">About</RouterLink>
           <a href="https://github.com/formosora" target="_blank" rel="noopener">GitHub</a>
         </nav>
