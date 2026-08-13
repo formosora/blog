@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { t } from '../i18n'
 import { formatDate, posts } from '../posts'
 
 const activeTag = ref<string | null>(null)
@@ -12,15 +13,15 @@ const filtered = computed(() =>
 </script>
 
 <template>
-  <div class="posts-page">
-    <h1 class="page-title">All posts</h1>
+  <div>
+    <h1 class="page-title">{{ t('文章', 'Posts') }}</h1>
 
     <div class="tag-bar" v-if="allTags.length">
       <button
         class="tag-chip"
         :class="{ active: activeTag === null }"
         @click="activeTag = null"
-      >All</button>
+      >{{ t('全部', 'All') }}</button>
       <button
         v-for="tag in allTags"
         :key="tag"

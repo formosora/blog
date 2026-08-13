@@ -1,4 +1,5 @@
 import MarkdownIt from 'markdown-it'
+import { lang } from './i18n'
 
 const md = new MarkdownIt({ html: true, linkify: true })
 
@@ -55,13 +56,15 @@ export const getPost = (slug: string): Post | undefined => posts.find(p => p.slu
 
 export const renderPost = (post: Post): string => (post.html ??= md.render(post.body))
 
-/** "2026-08-05" -> "Aug 5, 2026" */
-export const formatDate = (iso: string): string =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString('en-US', {
+/** "2026-08-05" -> "Aug 5, 2026"（英文浏览器）或 "2026年8月5日"（中文浏览器） */
+export const formatDate = (iso: string): string => {
+  const isZh = lang.value === 'zh'
+  return new Date(`${iso}T00:00:00`).toLocaleDateString(isZh ? 'zh-CN' : 'en-US', {
     year: 'numeric',
-    month: 'short',
+    month: isZh ? 'long' : 'short',
     day: 'numeric',
   })
+}
 
 /** Deterministic hue from a string, for generated card covers. */
 export const coverHue = (seed: string): number => {

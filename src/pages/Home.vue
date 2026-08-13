@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import ProfileCard from '../components/ProfileCard.vue'
-import MusicCard from '../components/MusicCard.vue'
 import TickerBar from '../components/TickerBar.vue'
+import { t } from '../i18n'
 import { coverHue, formatDate, posts, tagEmoji } from '../posts'
 import { theme, toggleTheme } from '../theme'
 
@@ -33,21 +33,22 @@ const coverStyle = (slug: string) => {
   <div class="search-wrap">
     <label class="search-box">
       <span class="mag">🔍</span>
-      <input v-model="query" type="search" placeholder="搜索标题、描述或标签…" />
+      <input
+        v-model="query"
+        type="search"
+        :placeholder="t('搜索标题、描述或标签…', 'Search title, excerpt or tags…')"
+      />
     </label>
   </div>
 
-  <div class="home-grid">
-    <ProfileCard />
-    <MusicCard />
-  </div>
+  <ProfileCard />
 
   <TickerBar />
 
   <section>
     <div class="section-head">
-      <h2>最新文章</h2>
-      <RouterLink to="/posts" class="more-link">全部文章 →</RouterLink>
+      <h2>{{ t('最新文章', 'Latest writing') }}</h2>
+      <RouterLink to="/posts" class="more-link">{{ t('全部文章 →', 'All posts →') }}</RouterLink>
     </div>
 
     <div class="bento">
@@ -73,8 +74,10 @@ const coverStyle = (slug: string) => {
 
       <button class="glass-card bento-item theme-card" @click="toggleTheme">
         <span class="theme-icon">{{ theme === 'dark' ? '🌞' : '✨' }}</span>
-        <b>{{ theme === 'dark' ? '日间模式' : '夜间模式' }}</b>
-        <span>{{ theme === 'dark' ? '切换到清爽浅色' : '流萤飞舞的深空' }}</span>
+        <b>{{ theme === 'dark' ? t('日间模式', 'Light mode') : t('夜间模式', 'Dark mode') }}</b>
+        <span>{{
+          theme === 'dark' ? t('切换到清爽浅色', 'Switch to light') : t('流萤飞舞的深空', 'Fireflies in deep space')
+        }}</span>
       </button>
     </div>
   </section>

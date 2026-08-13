@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import BackgroundFX from './components/BackgroundFX.vue'
 import StatusBar from './components/StatusBar.vue'
+import { t } from './i18n'
 </script>
 
 <template>
@@ -9,10 +10,10 @@ import StatusBar from './components/StatusBar.vue'
 
     <header class="site-header glass-bar">
       <div class="wrap header-inner">
-        <RouterLink to="/" class="brand">formosora<span> の 小站</span></RouterLink>
+        <RouterLink to="/" class="brand">formosora<span>{{ t(' の 小站', ' · blog') }}</span></RouterLink>
         <nav class="site-nav">
-          <RouterLink to="/projects">项目</RouterLink>
-          <RouterLink to="/posts">文章</RouterLink>
+          <RouterLink to="/projects">{{ t('项目', 'Projects') }}</RouterLink>
+          <RouterLink to="/posts">{{ t('文章', 'Posts') }}</RouterLink>
         </nav>
       </div>
     </header>

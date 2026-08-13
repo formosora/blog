@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { t } from '../i18n'
 import { posts } from '../posts'
 
 const postCount = posts.length
@@ -22,16 +23,18 @@ const projectCount = 4
     <div class="profile-main">
       <h1 class="profile-name">formosora</h1>
       <p class="profile-bio">
-        在台湾的开发者，开发与学习已近十年。白天写 Web（Vue / React / ASP.NET Core），
-        夜里研究安全与 Windows 内核，持续输出笔记。
+        {{ t(
+          '在台湾的开发者，开发与学习已近十年。白天写 Web（Vue / React / ASP.NET Core），夜里研究安全与 Windows 内核，持续输出笔记。',
+          'Developer based in Taiwan — nearly a decade of building & learning. Web (Vue / React / ASP.NET Core) by day, security and Windows kernels by night.'
+        ) }}
       </p>
 
       <div class="profile-stats">
-        <div class="stat"><b>{{ postCount }}</b><span>文章</span></div>
+        <div class="stat"><b>{{ postCount }}</b><span>{{ t('文章', 'Posts') }}</span></div>
         <div class="stat-divider" />
-        <div class="stat"><b>{{ tagCount }}</b><span>标签</span></div>
+        <div class="stat"><b>{{ tagCount }}</b><span>{{ t('标签', 'Tags') }}</span></div>
         <div class="stat-divider" />
-        <div class="stat"><b>{{ projectCount }}</b><span>项目</span></div>
+        <div class="stat"><b>{{ projectCount }}</b><span>{{ t('项目', 'Projects') }}</span></div>
 
         <div class="profile-socials">
           <a
@@ -48,8 +51,8 @@ const projectCount = 4
             rel="noopener"
             title="FreshBite"
           >🥗</a>
-          <RouterLink class="social-btn" to="/posts" title="文章">📝</RouterLink>
-          <RouterLink class="social-btn" to="/projects" title="项目">🧩</RouterLink>
+          <RouterLink class="social-btn" to="/posts" :title="t('文章', 'Posts')">📝</RouterLink>
+          <RouterLink class="social-btn" to="/projects" :title="t('项目', 'Projects')">🧩</RouterLink>
         </div>
       </div>
     </div>
