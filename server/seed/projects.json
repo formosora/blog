@@ -1,0 +1,34 @@
+[
+  {
+    "emoji": "🥗",
+    "name": "FreshBite",
+    "zh": "一个简单的食物订购网页：React 19 + TypeScript 店面，ASP.NET Core 9 + FormCMS 无头后端，SQLite，单容器 Docker 部署。",
+    "en": "A simple food-ordering web app: React 19 + TypeScript storefront, ASP.NET Core 9 + FormCMS headless backend, SQLite, single-container Docker deploy.",
+    "tech": ["React 19", "TypeScript", "ASP.NET Core", "FormCMS", "Docker"],
+    "url": "https://github.com/formosora/freshbite"
+  },
+  {
+    "emoji": "📝",
+    "name": "formosora · blog",
+    "zh": "你正在看的这个站：Vue 3 + Vite 驱动的 Markdown 博客，毛玻璃 UI，GitHub Pages 自动部署。",
+    "en": "This very site: a Vue 3 + Vite Markdown blog with a glassmorphism UI, auto-deployed to GitHub Pages.",
+    "tech": ["Vue 3", "TypeScript", "Vite", "GitHub Pages"],
+    "url": "https://github.com/formosora/blog"
+  },
+  {
+    "emoji": "🧩",
+    "name": "FormCMS",
+    "zh": "开源无头 CMS：ASP.NET Core + React，REST / GraphQL 双 API，内置 GrapesJS 页面设计器。",
+    "en": "Open-source headless CMS: ASP.NET Core + React, dual REST / GraphQL APIs, built-in GrapesJS page designer.",
+    "tech": ["C#", "ASP.NET Core", "React", "GraphQL"],
+    "url": "https://github.com/formosora/formcms"
+  },
+  {
+    "emoji": "🔐",
+    "name": "vuln-bite (planned)",
+    "zh": "故意埋入经典漏洞的 FreshBite 变体：SQLi / XSS / IDOR… 每个漏洞配攻击 writeup 与修复 commit，安全练手靶场。",
+    "en": "A deliberately vulnerable FreshBite variant: SQLi / XSS / IDOR… each with an attack writeup and a fix commit. A security training ground.",
+    "tech": ["Security", "Web", "Writeup"],
+    "url": "https://github.com/formosora"
+  }
+]

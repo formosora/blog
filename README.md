@@ -1,61 +1,66 @@
 # 📝 formosora · blog
 
-My personal blog — notes on **web development, security and Windows kernels**.
-Built with **Vue 3 + TypeScript + Vite**; posts are plain Markdown files with
-fully customizable display dates. Auto-deployed to GitHub Pages on every push.
+My full-stack personal blog platform: a **Vue 3 + TypeScript SPA** (public site +
+built-in admin) served by a **zero-dependency Node server**, shipped as **one
+Docker container**.
 
 ![Vue](https://img.shields.io/badge/Vue_3-4FC08D?style=flat-square&logo=vuedotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white)
-![GitHub Pages](https://img.shields.io/badge/GitHub_Pages-222222?style=flat-square&logo=githubpages&logoColor=white)
+![Node](https://img.shields.io/badge/Node.js_22-339933?style=flat-square&logo=nodedotjs&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
 
-## 📸 Screenshots
+## ✨ Features
 
-| Home | Post |
-| ---- | ---- |
-| ![Home](docs/screenshots/home.png) | ![Post](docs/screenshots/post.png) |
+- 🖋️ **Markdown posts** — frontmatter metadata, tag categories, live preview
+- 🎨 **Glassmorphism UI** — animated local wallpaper carousel, zh/en i18n, dark/light theme
+- 🔐 **Built-in admin** (`/admin`) — posts, projects and images, all as friendly forms
+- 🖼️ **Self-hosted image bed** — content-addressed storage (SHA-256 names), immutable caching
+- ⚡ **Zero-dependency backend** — plain `node:http`; the entire API is one readable file
+- 🐳 **Single-container deploy** — frontend build + API + static hosting + SPA fallback
 
-## ✍️ Writing a post
+## 📁 Structure
 
-Drop a Markdown file into `posts/`. The filename becomes the URL slug
-(`posts/my-note.md` → `/blog/post/my-note`), and the frontmatter controls
-everything else:
-
-```markdown
----
-title: My post title
-date: 2026-08-13          # publish date shown on the site
-updated: 2026-08-14       # optional, shown next to the publish date
-tags: [kernel, windows]   # optional, used for the filter chips
-excerpt: Optional summary # optional; auto-generated from the body if omitted
----
-
-Markdown content here…
 ```
-
-Posts are listed newest first.
+├── frontend/          # Vue 3 + TS + Vite SPA
+│   ├── src/pages/     # public site (home / posts / projects / post)
+│   ├── src/admin/     # the admin app (login / posts / projects / images)
+│   └── posts/         # bundled markdown (offline fallback content)
+├── server/
+│   ├── server.js      # the whole backend: API + static + SPA fallback
+│   └── seed/          # first-run seed posts & projects
+├── Dockerfile         # multi-stage: vite build → node runtime
+└── docker-compose.yml
+```
 
 ## 🚀 Develop
 
 ```bash
-npm install
-npm run dev       # http://localhost:5173/blog/
-npm run build     # production build → dist/ (plus 404.html SPA fallback)
-npm run preview   # serve the production build locally
+# terminal 1 — frontend with HMR on :5173 (proxies /api to :8080)
+cd frontend && npm install && npm run dev
+
+# terminal 2 — backend on :8080
+cd server && ADMIN_PASSWORD=dev123 node server.js
 ```
 
-## 📦 Deploy
+## 🐳 Deploy
 
-`.github/workflows/deploy.yml` builds the site and publishes it to GitHub
-Pages on every push to `main`. One-time setup: repo **Settings → Pages →
-Source → GitHub Actions**.
+```bash
+docker build -t blog .
+docker run -d --name blog -p 80:8080 \
+  -v blog-data:/app/data \
+  -e ADMIN_PASSWORD="choose-a-strong-one" \
+  blog
+```
 
-## 🧱 Stack
+or `docker compose up -d --build`. Data (posts, projects, images) lives in the
+`blog-data` volume — rebuilds never touch it.
 
-| Piece | Choice |
-| ----- | ------ |
-| Framework | Vue 3 + Vue Router |
-| Language | TypeScript |
-| Content | Markdown in `posts/`, rendered with markdown-it |
-| Styling | Hand-rolled CSS (custom properties, no framework) |
-| Hosting | GitHub Pages (project site, base `/blog/`) |
+## ⚙️ Configuration
+
+| Variable | Scope | Default | Purpose |
+| -------- | ----- | ------- | ------- |
+| `ADMIN_PASSWORD` | runtime | `change-me` | admin login |
+| `DATA_DIR` | runtime | `/app/data` | where posts/projects/images live |
+| `BUILD_BASE` | build | `/blog/` | URL base; `/` for self-hosting |
+| `VITE_LAUNCH_DATE` | build | repo's real launch | uptime counter in the footer |

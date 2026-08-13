@@ -1,5 +1,14 @@
+# dependencies & build output
 node_modules/
 dist/
+server/wwwroot/
+
+# runtime data
+server/data/
+data/
+.env
+
+# OS / IDE
 .DS_Store
 .idea/
-*.local
+.vscode/

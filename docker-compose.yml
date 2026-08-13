@@ -1,0 +1,14 @@
+services:
+  blog:
+    build: .
+    container_name: blog
+    ports:
+      - "80:8080"
+    environment:
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me}
+    volumes:
+      - blog-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  blog-data:
