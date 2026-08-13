@@ -3,12 +3,21 @@ import { computed, ref } from 'vue'
 import { t } from '../i18n'
 import { formatDate, posts } from '../posts'
 
+const CATEGORIES = ['WebDev', 'WebSafety', 'SystemKernel', 'SystemKernelSafety', 'Gadgets']
+
 const activeTag = ref<string | null>(null)
 
-const allTags = computed(() => [...new Set(posts.flatMap(p => p.tags))])
+const counts = computed(() => {
+  const map: Record<string, number> = {}
+  for (const c of CATEGORIES) map[c] = 0
+  for (const p of posts.value) {
+    for (const tag of p.tags) if (tag in map) map[tag]++
+  }
+  return map
+})
 
 const filtered = computed(() =>
-  activeTag.value ? posts.filter(p => p.tags.includes(activeTag.value!)) : posts
+  activeTag.value ? posts.value.filter(p => p.tags.includes(activeTag.value!)) : posts.value
 )
 </script>
 
@@ -16,19 +25,23 @@ const filtered = computed(() =>
   <div>
     <h1 class="page-title">{{ t('文章', 'Posts') }}</h1>
 
-    <div class="tag-bar" v-if="allTags.length">
+    <div class="tag-bar">
       <button
         class="tag-chip"
         :class="{ active: activeTag === null }"
         @click="activeTag = null"
-      >{{ t('全部', 'All') }}</button>
+      >{{ t('全部', 'All') }} · {{ posts.length }}</button>
       <button
-        v-for="tag in allTags"
-        :key="tag"
+        v-for="cat in CATEGORIES"
+        :key="cat"
         class="tag-chip"
-        :class="{ active: activeTag === tag }"
-        @click="activeTag = tag"
-      >{{ tag }}</button>
+        :class="{ active: activeTag === cat, dim: counts[cat] === 0 }"
+        @click="activeTag = cat"
+      >{{ cat }} · {{ counts[cat] }}</button>
+    </div>
+
+    <div v-if="filtered.length === 0" class="glass-card empty-state">
+      <p>{{ t('这个分类还没有文章，先在后台写一篇吧。', 'No posts in this category yet.') }}</p>
     </div>
 
     <ul class="post-list">
