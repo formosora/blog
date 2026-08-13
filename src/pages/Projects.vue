@@ -22,8 +22,8 @@ const projects: Project[] = [
   {
     emoji: '📝',
     name: 'formosora · blog',
-    zh: '你正在看的这个站：Vue 3 + Vite 驱动的 Markdown 博客，自定义文章日期，毛玻璃 UI，GitHub Pages 自动部署。',
-    en: 'This very site: a Vue 3 + Vite Markdown blog with custom post dates, glassmorphism UI and GitHub Pages auto-deploy.',
+    zh: '你正在看的这个站：Vue 3 + Vite 驱动的 Markdown 博客，毛玻璃 UI，GitHub Pages 自动部署。',
+    en: 'This very site: a Vue 3 + Vite Markdown blog with a glassmorphism UI, auto-deployed to GitHub Pages.',
     tech: ['Vue 3', 'TypeScript', 'Vite', 'GitHub Pages'],
     url: 'https://github.com/formosora/blog',
   },

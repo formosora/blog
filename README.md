@@ -24,7 +24,7 @@ everything else:
 ```markdown
 ---
 title: My post title
-date: 2026-08-13          # display date — fully custom, filename-independent
+date: 2026-08-13          # publish date shown on the site
 updated: 2026-08-14       # optional, shown next to the publish date
 tags: [kernel, windows]   # optional, used for the filter chips
 excerpt: Optional summary # optional; auto-generated from the body if omitted
@@ -33,8 +33,7 @@ excerpt: Optional summary # optional; auto-generated from the body if omitted
 Markdown content here…
 ```
 
-Posts are sorted by the frontmatter `date` (newest first), so you can backdate
-older notes or pin the reading order exactly as you like.
+Posts are listed newest first.
 
 ## 🚀 Develop
 
