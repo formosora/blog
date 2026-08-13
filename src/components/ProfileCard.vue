@@ -26,8 +26,8 @@ const projectCount = 4
       <h1 class="profile-name">formosora</h1>
       <p class="profile-bio">
         {{ t(
-          '在台湾的开发者，开发与学习已近十年。白天写 Web（Vue / React / ASP.NET Core），夜里研究安全与 Windows 内核，持续输出笔记。',
-          'Developer based in Taiwan — nearly a decade of building & learning. Web (Vue / React / ASP.NET Core) by day, security and Windows kernels by night.'
+          '在台湾的开发者，开发与学习已近十年。有时写 Web（Vue / React / ASP.NET Core），有时钻研安全与 Windows 内核——兴趣驱动，持续学习，持续输出。',
+          'Developer based in Taiwan — nearly a decade of building & learning. Sometimes building web apps (Vue / React / ASP.NET Core), sometimes digging into security and Windows kernels — curiosity-driven, always writing it down.'
         ) }}
       </p>
 
