@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { t } from '../i18n'
 import { posts } from '../posts'
+import avatarUrl from '../assets/avatar.jpg'
 
 const EMAIL = 'forlmosora@gmail.com'
 
@@ -15,7 +16,7 @@ const projectCount = 4
     <div class="avatar-ring">
       <img
         class="avatar"
-        src="https://avatars.githubusercontent.com/u/53005693?v=4"
+        :src="avatarUrl"
         alt="formosora avatar"
         width="96"
         height="96"
