@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import { t } from '../i18n'
 
 interface Project {
@@ -36,14 +37,28 @@ const projects: Project[] = [
     url: 'https://github.com/formosora/formcms',
   },
   {
-    emoji: '🔐',
-    name: t('vuln-bite（规划中）', 'vuln-bite (planned)'),
-    zh: '故意埋入经典漏洞的 FreshBite 变体：SQLi / XSS / IDOR… 每个漏洞配攻击 writeup 与修复 commit，安全练手靶场。',
-    en: 'A deliberately vulnerable FreshBite variant: SQLi / XSS / IDOR… each with an attack writeup and a fix commit. A security training ground.',
-    tech: ['Security', 'Web', 'Writeup'],
-    url: 'https://github.com/formosora',
+    emoji: '🔓',
+    name: 'vuln-bite',
+    zh: '故意留漏洞的食物订购靶场：3 个真实漏洞（硬编码凭证 / IDOR / 默认管理员密码），附攻击指南与修复分支，配合博客 writeup 形成攻防闭环。',
+    en: 'A deliberately vulnerable FreshBite variant — 3 real vulnerabilities with exploit guides and fix branches. A security training ground.',
+    tech: ['Security', 'React', 'ASP.NET Core', 'Docker'],
+    url: 'https://github.com/formosora/vuln-bite',
   },
 ]
+
+const projectList = ref<Project[]>(projects)
+
+onMounted(async () => {
+  try {
+    const res = await fetch(`${import.meta.env.BASE_URL}api/projects`)
+    if (res.ok) {
+      const data = await res.json()
+      if (Array.isArray(data) && data.length) projectList.value = data
+    }
+  } catch {
+    /* static mirror: keep bundled list */
+  }
+})
 </script>
 
 <template>
@@ -51,7 +66,7 @@ const projects: Project[] = [
     <h1 class="page-title">{{ t('项目', 'Projects') }}</h1>
     <div class="project-grid">
       <div
-        v-for="(p, i) in projects"
+        v-for="(p, i) in projectList"
         :key="p.name"
         class="glass-card project-card"
         :style="{ animationDelay: 0.08 + i * 0.08 + 's' }"
