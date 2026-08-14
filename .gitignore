@@ -12,3 +12,7 @@ data/
 .DS_Store
 .idea/
 .vscode/
+
+# article content lives only on the server (SQLite volume)
+frontend/posts/
+server/seed/*.md
