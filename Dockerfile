@@ -1,5 +1,5 @@
 # ---------- frontend build ----------
-FROM node:22-alpine AS fe
+FROM node:24-alpine AS fe
 WORKDIR /fe
 COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm install --no-audit --no-fund
@@ -9,7 +9,7 @@ ENV BUILD_BASE=/ \
 RUN npm run build
 
 # ---------- runtime ----------
-FROM node:22-alpine
+FROM node:24-alpine
 WORKDIR /app
 ENV NODE_ENV=production \
     PORT=8080 \

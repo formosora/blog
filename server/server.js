@@ -6,11 +6,12 @@ import {
 import { dirname, extname, join, normalize } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { randomUUID, createHash } from 'node:crypto'
+import { DatabaseSync } from 'node:sqlite'
 
 const ROOT = dirname(fileURLToPath(import.meta.url))
 const PORT = Number(process.env.PORT || 8080)
 const DATA_DIR = process.env.DATA_DIR || join(ROOT, 'data')
-const POSTS_DIR = join(DATA_DIR, 'posts')
+const POSTS_DIR = join(DATA_DIR, 'posts')          // legacy file storage (imported once, then unused)
 const PROJECTS_FILE = join(DATA_DIR, 'projects.json')
 const IMAGES_DIR = join(DATA_DIR, 'images')
 const IMAGES_META = join(DATA_DIR, 'images.json')
@@ -23,17 +24,33 @@ mkdirSync(IMAGES_DIR, { recursive: true })
 const loadImageMeta = () => (existsSync(IMAGES_META) ? JSON.parse(readFileSync(IMAGES_META, 'utf8')) : {})
 const saveImageMeta = m => writeFileSync(IMAGES_META, JSON.stringify(m, null, 2))
 
-// ---------- first-run seed ----------
-const seedDir = join(ROOT, 'seed')
-if (existsSync(seedDir) && !readdirSync(POSTS_DIR).some(f => f.endsWith('.md'))) {
-  for (const f of readdirSync(seedDir).filter(f => f.endsWith('.md')))
-    copyFileSync(join(seedDir, f), join(POSTS_DIR, f))
-}
-if (existsSync(join(seedDir, 'projects.json')) && !existsSync(PROJECTS_FILE)) {
-  copyFileSync(join(seedDir, 'projects.json'), PROJECTS_FILE)
-}
+// ---------- database ----------
+const db = new DatabaseSync(join(DATA_DIR, 'blog.db'))
+db.exec(`
+  CREATE TABLE IF NOT EXISTS posts (
+    slug    TEXT PRIMARY KEY,
+    title   TEXT NOT NULL,
+    date    TEXT NOT NULL,
+    updated TEXT,
+    tags    TEXT NOT NULL DEFAULT '[]',
+    excerpt TEXT,
+    body    TEXT NOT NULL
+  )
+`)
 
-const tokens = new Map() // token -> expiry ms
+db.exec(`
+  CREATE TABLE IF NOT EXISTS projects (
+    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    emoji   TEXT,
+    name    TEXT NOT NULL,
+    zh      TEXT,
+    en      TEXT,
+    tech    TEXT NOT NULL DEFAULT '[]',
+    url     TEXT,
+    date    TEXT,
+    sort    INTEGER NOT NULL DEFAULT 0
+  )
+`)
 
 // ---------- markdown frontmatter ----------
 function parse(raw) {
@@ -57,36 +74,69 @@ const parseTags = meta =>
 const autoExcerpt = body =>
   body.replace(/[#*`>\[\]\n]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 140) + '…'
 
-function postJson(file) {
+function importMarkdown(file) {
   const { meta, body } = parse(readFileSync(file, 'utf8'))
   const slug = file.split(/[\\/]/).pop().replace(/\.md$/, '')
-  return {
+  db.prepare(
+    'INSERT OR IGNORE INTO posts (slug, title, date, updated, tags, excerpt, body) VALUES (?, ?, ?, ?, ?, ?, ?)'
+  ).run(
     slug,
-    title: meta.title || slug,
-    date: meta.date || '',
-    updated: meta.updated || null,
-    tags: parseTags(meta),
-    excerpt: meta.excerpt || autoExcerpt(body),
-    body,
+    meta.title || slug,
+    meta.date || '',
+    meta.updated || null,
+    JSON.stringify(parseTags(meta)),
+    meta.excerpt || autoExcerpt(body),
+    body
+  )
+}
+
+// ---------- first-run seed (and legacy file import) ----------
+{
+  const count = db.prepare('SELECT COUNT(*) AS n FROM posts').get().n
+  if (count === 0) {
+    if (existsSync(POSTS_DIR)) {
+      for (const f of readdirSync(POSTS_DIR).filter(f => f.endsWith('.md')))
+        importMarkdown(join(POSTS_DIR, f))
+    }
+    const seedDir = join(ROOT, 'seed')
+    if (existsSync(seedDir)) {
+      for (const f of readdirSync(seedDir).filter(f => f.endsWith('.md')))
+        importMarkdown(join(seedDir, f))
+    }
+  }
+
+  // projects: DB first; import legacy JSON / seed when empty
+  const pCount = db.prepare('SELECT COUNT(*) AS n FROM projects').get().n
+  if (pCount === 0) {
+    const seedDir = join(ROOT, 'seed')
+    const source = existsSync(PROJECTS_FILE)
+      ? PROJECTS_FILE
+      : existsSync(join(seedDir, 'projects.json'))
+        ? join(seedDir, 'projects.json')
+        : null
+    if (source) {
+      const arr = JSON.parse(readFileSync(source, 'utf8'))
+      const ins = db.prepare(
+        'INSERT INTO projects (emoji, name, zh, en, tech, url, date, sort) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+      )
+      arr.forEach((p, i) =>
+        ins.run(p.emoji || '', p.name || '', p.zh || '', p.en || '',
+                JSON.stringify(p.tech || []), p.url || '', p.date || '', i)
+      )
+    }
   }
 }
 
-const listPosts = () =>
-  readdirSync(POSTS_DIR)
-    .filter(f => f.endsWith('.md'))
-    .map(f => postJson(join(POSTS_DIR, f)))
-    .sort((a, b) => (a.date < b.date ? 1 : -1))
-
 const VALID_SLUG = /^[a-z0-9][a-z0-9-]*$/
 
-function serializePost(p) {
-  let out = '---\n'
-  out += `title: ${p.title}\n`
-  out += `date: ${p.date}\n`
-  if (p.updated) out += `updated: ${p.updated}\n`
-  out += `tags: [${(p.tags || []).join(', ')}]\n`
-  if (p.excerpt) out += `excerpt: ${p.excerpt}\n`
-  return out + '---\n\n' + p.body
+const listPosts = () =>
+  db.prepare('SELECT slug, title, date, updated, tags, excerpt, body FROM posts ORDER BY date DESC')
+    .all()
+    .map(r => ({ ...r, tags: JSON.parse(r.tags || '[]') }))
+
+const getPost = slug => {
+  const r = db.prepare('SELECT slug, title, date, updated, tags, excerpt, body FROM posts WHERE slug = ?').get(slug)
+  return r ? { ...r, tags: JSON.parse(r.tags || '[]') } : null
 }
 
 const authed = req => {
@@ -94,6 +144,8 @@ const authed = req => {
   const exp = tokens.get(tok)
   return !!exp && exp > Date.now()
 }
+
+const tokens = new Map() // token -> expiry ms
 
 // ---------- helpers ----------
 const MIME = {
@@ -149,12 +201,14 @@ async function handleApi(req, res, path, url) {
 
   const postMatch = path.match(/^\/api\/posts\/([a-z0-9-]+)$/)
   if (postMatch && req.method === 'GET') {
-    const file = join(POSTS_DIR, postMatch[1] + '.md')
-    return existsSync(file) ? send(res, 200, postJson(file)) : send(res, 404, { error: 'not found' })
+    const post = getPost(postMatch[1])
+    return post ? send(res, 200, post) : send(res, 404, { error: 'not found' })
   }
 
-  if (path === '/api/projects' && req.method === 'GET')
-    return send(res, 200, existsSync(PROJECTS_FILE) ? readFileSync(PROJECTS_FILE, 'utf8') : '[]')
+  if (path === '/api/projects' && req.method === 'GET') {
+    const rows = db.prepare('SELECT emoji, name, zh, en, tech, url, date FROM projects ORDER BY sort, id').all()
+    return send(res, 200, rows.map(r => ({ ...r, tech: JSON.parse(r.tech || '[]') })))
+  }
 
   if (path === '/api/login' && req.method === 'POST') {
     const body = JSON.parse(await readBody(req).catch(() => '{}'))
@@ -164,7 +218,6 @@ async function handleApi(req, res, path, url) {
     return send(res, 200, { token })
   }
 
-  // everything below requires the admin token
   if (path === '/api/admin/check')
     return authed(req) ? send(res, 200, { ok: true }) : send(res, 401, { error: 'unauthorized' })
 
@@ -175,27 +228,50 @@ async function handleApi(req, res, path, url) {
     if (!VALID_SLUG.test(slug)) return send(res, 400, { error: 'invalid slug' })
     const p = JSON.parse(await readBody(req))
     if (!p.title || !p.date) return send(res, 400, { error: 'title and date are required' })
-    writeFileSync(join(POSTS_DIR, slug + '.md'), serializePost(p))
+    db.prepare(
+      `INSERT INTO posts (slug, title, date, updated, tags, excerpt, body)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(slug) DO UPDATE SET
+         title=excluded.title, date=excluded.date, updated=excluded.updated,
+         tags=excluded.tags, excerpt=excluded.excerpt, body=excluded.body`
+    ).run(
+      slug, p.title, p.date, p.updated || null,
+      JSON.stringify(p.tags || []), p.excerpt || autoExcerpt(p.body || ''), p.body || ''
+    )
     return send(res, 200, { ok: true })
   }
 
   if (adminPost && req.method === 'DELETE') {
     if (!authed(req)) return send(res, 401, { error: 'unauthorized' })
-    const file = join(POSTS_DIR, adminPost[1] + '.md')
-    if (!existsSync(file)) return send(res, 404, { error: 'not found' })
-    unlinkSync(file)
-    return send(res, 200, { ok: true })
+    const info = db.prepare('DELETE FROM posts WHERE slug = ?').run(adminPost[1])
+    return info.changes > 0 ? send(res, 200, { ok: true }) : send(res, 404, { error: 'not found' })
   }
 
   if (path === '/api/admin/projects' && req.method === 'PUT') {
     if (!authed(req)) return send(res, 401, { error: 'unauthorized' })
     const raw = await readBody(req)
+    let arr
     try {
-      JSON.parse(raw)
+      arr = JSON.parse(raw)
+      if (!Array.isArray(arr)) throw new Error('not an array')
     } catch {
       return send(res, 400, { error: 'invalid JSON' })
     }
-    writeFileSync(PROJECTS_FILE, raw)
+    db.exec('BEGIN')
+    try {
+      db.exec('DELETE FROM projects')
+      const ins = db.prepare(
+        'INSERT INTO projects (emoji, name, zh, en, tech, url, date, sort) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+      )
+      arr.forEach((p, i) =>
+        ins.run(p.emoji || '', p.name || '', p.zh || '', p.en || '',
+                JSON.stringify(p.tech || []), p.url || '', p.date || '', i)
+      )
+      db.exec('COMMIT')
+    } catch (err) {
+      db.exec('ROLLBACK')
+      throw err
+    }
     return send(res, 200, { ok: true })
   }
 
