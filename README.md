@@ -61,6 +61,7 @@ or `docker compose up -d --build`. Data (posts, projects, images) lives in the
 | Variable | Scope | Default | Purpose |
 | -------- | ----- | ------- | ------- |
 | `ADMIN_PASSWORD` | runtime | `change-me` | admin login |
-| `DATA_DIR` | runtime | `/app/data` | where posts/projects/images live |
+| `PORT` | runtime | `8080` | port the server listens on |
+| `DATA_DIR` | runtime | `server/data` (`/app/data` in Docker) | where posts/projects/images live |
 | `BUILD_BASE` | build | `/blog/` | URL base; `/` for self-hosting |
 | `VITE_LAUNCH_DATE` | build | repo's real launch | uptime counter in the footer |
