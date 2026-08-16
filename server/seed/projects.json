@@ -55,5 +55,33 @@
     ],
     "url": "https://github.com/formosora/vuln-bite",
     "date": "2026-08"
+  },
+  {
+    "emoji": "🪟",
+    "name": "win-kernel-lab",
+    "zh": "原创 Windows 内核实验室：进程监控 / 内存读写 / ETW 仪表盘 / 文件过滤四个驱动级 PoC，全部 MSVC 实测编译通过。",
+    "en": "Original Windows kernel lab — four compile-verified PoCs: process watch, memory RW, ETW live dashboard and a minifilter.",
+    "tech": [
+      "C",
+      "C++",
+      "WDK",
+      "Kernel"
+    ],
+    "url": "https://github.com/formosora/win-kernel-lab",
+    "date": "2025"
+  },
+  {
+    "emoji": "🎬",
+    "name": "vidhub",
+    "zh": "自托管视频床：流式上传、Range 分段秒播、独立播放页与嵌入码，Vue 3 + 零依赖 Node 单容器。",
+    "en": "Self-hosted video bed — streaming uploads, Range/206 playback, player pages and embed codes. Vue 3 + zero-dep Node in one container.",
+    "tech": [
+      "Vue 3",
+      "Node.js",
+      "Docker",
+      "Streaming"
+    ],
+    "url": "https://github.com/formosora/vidhub",
+    "date": "2026-08"
   }
 ]
