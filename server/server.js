@@ -3,9 +3,9 @@ import {
   copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync,
   statSync, unlinkSync, writeFileSync,
 } from 'node:fs'
-import { dirname, extname, join, normalize } from 'node:path'
+import { dirname, extname, join, normalize, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { randomUUID, createHash } from 'node:crypto'
+import { randomUUID, createHash, timingSafeEqual } from 'node:crypto'
 import { DatabaseSync } from 'node:sqlite'
 
 const ROOT = dirname(fileURLToPath(import.meta.url))
@@ -16,7 +16,11 @@ const PROJECTS_FILE = join(DATA_DIR, 'projects.json')
 const IMAGES_DIR = join(DATA_DIR, 'images')
 const IMAGES_META = join(DATA_DIR, 'images.json')
 const WWWROOT = join(ROOT, 'wwwroot')
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change-me'
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
+if (!ADMIN_PASSWORD || ADMIN_PASSWORD === 'change-me') {
+  console.error('FATAL: set a strong ADMIN_PASSWORD env var — refusing to start with an empty or default password')
+  process.exit(1)
+}
 
 mkdirSync(POSTS_DIR, { recursive: true })
 mkdirSync(IMAGES_DIR, { recursive: true })
@@ -51,6 +55,33 @@ db.exec(`
     sort    INTEGER NOT NULL DEFAULT 0
   )
 `)
+
+// ---------- safe helpers ----------
+const safeJson = (raw, fallback = null) => { try { return JSON.parse(raw) } catch { return fallback } }
+
+const sha256 = s => createHash('sha256').update(String(s)).digest()
+const ADMIN_PASSWORD_HASH = sha256(ADMIN_PASSWORD)
+// constant-time compare; hashing first keeps timing constant across differing input lengths
+const passwordMatches = input => {
+  try { return timingSafeEqual(sha256(input), ADMIN_PASSWORD_HASH) } catch { return false }
+}
+
+// login brute-force throttle, keyed by client IP (Caddy sets X-Forwarded-For)
+const LOGIN_WINDOW_MS = 15 * 60_000
+const LOGIN_MAX_FAILS = 10
+const loginFails = new Map() // ip -> { count, resetAt }
+const clientIp = req =>
+  (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress || 'unknown'
+const loginBlocked = ip => {
+  const r = loginFails.get(ip)
+  return !!r && r.resetAt > Date.now() && r.count >= LOGIN_MAX_FAILS
+}
+const noteLoginFail = ip => {
+  const now = Date.now()
+  const r = loginFails.get(ip)
+  if (!r || r.resetAt <= now) loginFails.set(ip, { count: 1, resetAt: now + LOGIN_WINDOW_MS })
+  else r.count++
+}
 
 // ---------- markdown frontmatter ----------
 function parse(raw) {
@@ -163,7 +194,7 @@ const MIME = {
 }
 
 function send(res, code, body, type = 'application/json; charset=utf-8', headers = {}) {
-  res.writeHead(code, { 'Content-Type': type, ...headers })
+  res.writeHead(code, { 'Content-Type': type, 'X-Content-Type-Options': 'nosniff', ...headers })
   res.end(typeof body === 'string' || Buffer.isBuffer(body) ? body : JSON.stringify(body))
 }
 
@@ -211,8 +242,14 @@ async function handleApi(req, res, path, url) {
   }
 
   if (path === '/api/login' && req.method === 'POST') {
-    const body = JSON.parse(await readBody(req).catch(() => '{}'))
-    if (body.password !== ADMIN_PASSWORD) return send(res, 401, { error: 'unauthorized' })
+    const ip = clientIp(req)
+    if (loginBlocked(ip)) return send(res, 429, { error: 'too many attempts, try again later' })
+    const body = safeJson(await readBody(req).catch(() => '{}'), {})
+    if (!passwordMatches(body.password)) {
+      noteLoginFail(ip)
+      return send(res, 401, { error: 'unauthorized' })
+    }
+    loginFails.delete(ip)
     const token = randomUUID().replaceAll('-', '')
     tokens.set(token, Date.now() + 12 * 3600_000)
     return send(res, 200, { token })
@@ -226,7 +263,8 @@ async function handleApi(req, res, path, url) {
     if (!authed(req)) return send(res, 401, { error: 'unauthorized' })
     const slug = adminPost[1]
     if (!VALID_SLUG.test(slug)) return send(res, 400, { error: 'invalid slug' })
-    const p = JSON.parse(await readBody(req))
+    const p = safeJson(await readBody(req))
+    if (!p || typeof p !== 'object') return send(res, 400, { error: 'invalid JSON' })
     if (!p.title || !p.date) return send(res, 400, { error: 'title and date are required' })
     db.prepare(
       `INSERT INTO posts (slug, title, date, updated, tags, excerpt, body)
@@ -277,6 +315,7 @@ async function handleApi(req, res, path, url) {
 
   // ---------- image bed ----------
   if (path === '/api/images' && req.method === 'GET') {
+    if (!authed(req)) return send(res, 401, { error: 'unauthorized' })
     const meta = loadImageMeta()
     return send(res, 200, Object.entries(meta).map(([name, m]) => ({ name, ...m })))
   }
@@ -330,12 +369,16 @@ http
         if (!existsSync(file)) return send(res, 404, 'not found', 'text/plain')
         return send(res, 200, readFileSync(file),
           MIME[extname(file).toLowerCase()] || 'application/octet-stream',
-          { 'Cache-Control': 'public, max-age=31536000, immutable' })
+          {
+            'Cache-Control': 'public, max-age=31536000, immutable',
+            // sandbox user-uploaded content: neutralize scripting in SVGs even if opened top-level
+            'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+          })
       }
 
       // static + SPA fallback
       let file = normalize(join(WWWROOT, path))
-      if (!file.startsWith(WWWROOT)) return send(res, 403, 'forbidden', 'text/plain')
+      if (file !== WWWROOT && !file.startsWith(WWWROOT + sep)) return send(res, 403, 'forbidden', 'text/plain')
       if (existsSync(file) && statSync(file).isDirectory()) file = join(file, 'index.html')
       if (!existsSync(file) || !statSync(file).isFile()) {
         if (extname(path)) return send(res, 404, 'not found', 'text/plain')

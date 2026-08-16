@@ -1,0 +1,57 @@
+# =============================================================================
+#  Caddyfile — formosora.xyz
+#  Reverse proxy + TLS + security hardening in front of the blog container.
+#
+#  Deploy:
+#    1. put this at /etc/caddy/Caddyfile on the host
+#    2. run the app bound to localhost only (see docker-compose.yml:
+#       ports: "127.0.0.1:8080:8080") so the Node server is reachable ONLY
+#       through Caddy, never directly from the internet
+#    3. `caddy reload --config /etc/caddy/Caddyfile`  (or `systemctl reload caddy`)
+#
+#  After deploying, open the site + /admin and watch the browser console: if the
+#  Content-Security-Policy blocks something legitimate, add that source below.
+# =============================================================================
+
+formosora.xyz, www.formosora.xyz {
+	encode zstd gzip
+
+	# ---- headers applied to every response -----------------------------------
+	header {
+		# force HTTPS for a year incl. subdomains; submit to hstspreload.org when ready
+		Strict-Transport-Security  "max-age=31536000; includeSubDomains; preload"
+		# block MIME sniffing (e.g. a .png that actually contains HTML)
+		X-Content-Type-Options     "nosniff"
+		# no framing anywhere -> clickjacking protection for /admin
+		X-Frame-Options            "DENY"
+		Referrer-Policy            "strict-origin-when-cross-origin"
+		Permissions-Policy         "geolocation=(), microphone=(), camera=(), interest-cohort=()"
+		Cross-Origin-Opener-Policy "same-origin"
+		# don't advertise the server software
+		-Server
+	}
+
+	# ---- Content-Security-Policy: exactly one policy per request --------------
+	@admin path /admin /admin/*
+	@img   path /img/*
+	@site  not path /admin /admin/* /img/*
+
+	# public SPA: same-origin only; the built index has no inline <script>
+	header @site Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+
+	# admin page: inline <script>/<style> + self-hosted markdown-it.js (no CDN)
+	header @admin Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+
+	# user-uploaded images: sandbox so a malicious SVG can't run script on-origin
+	header @img Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; sandbox"
+
+	# ---- reverse proxy to the blog container ---------------------------------
+	reverse_proxy 127.0.0.1:8080 {
+		# OVERWRITE (not append) X-Forwarded-For with the true peer IP, so a
+		# client can't spoof the header to dodge the login rate-limiter.
+		# NOTE: correct only while Caddy is the edge. If you add a CDN in front,
+		# switch to trusted_proxies + {http.request.header.X-Forwarded-For}.
+		header_up X-Forwarded-For   {http.request.remote.host}
+		header_up X-Forwarded-Proto {http.request.scheme}
+	}
+}

@@ -53,14 +53,19 @@ docker run -d --name blog -p 80:8080 \
   blog
 ```
 
-or `docker compose up -d --build`. Data (posts, projects, images) lives in the
+or, with an `ADMIN_PASSWORD=…` line in a gitignored `.env` file,
+`docker compose up -d --build`. Data (posts, projects, images) lives in the
 `blog-data` volume — rebuilds never touch it.
+
+In production the container is fronted by **Caddy** (TLS, HSTS, CSP and other
+security headers) — see [`Caddyfile`](Caddyfile). For the threat model and the
+hardening applied to the backend, see [`SECURITY.md`](SECURITY.md).
 
 ## ⚙️ Configuration
 
 | Variable | Scope | Default | Purpose |
 | -------- | ----- | ------- | ------- |
-| `ADMIN_PASSWORD` | runtime | `change-me` | admin login |
+| `ADMIN_PASSWORD` | runtime | **required** (no default — server refuses to start without it) | admin login |
 | `PORT` | runtime | `8080` | port the server listens on |
 | `DATA_DIR` | runtime | `server/data` (`/app/data` in Docker) | where posts/projects/images live |
 | `BUILD_BASE` | build | `/blog/` | URL base; `/` for self-hosting |
